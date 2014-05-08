@@ -2,11 +2,9 @@
 
 var fs = require('fs');
 var path = require('path');
+var mkdirp = require('mkdirp');
 
-var fileName = path.join('.', process.argv[2]);
-var outPath = path.join('.', path.dirname(fileName));
-
-var source = fs.readFileSync(fileName, 'utf8');
+var source = fs.readFileSync('./ckeditor.js', 'utf8');
 
 //just in case we have crlf style newlines
 source = source.split('\r\n').join('\n');
@@ -37,9 +35,10 @@ tags.forEach(function(tag, i) {
   newSource.push(before);
   newSource.push('/*![' + tag.path + ']!*/');
   var tagLength = tag.path.length + 8;
-  var fragmentSource = source.slice(tag.startPos + tagLength, tag.endPos);
+  var fragmentSource = source.slice(tag.startPos, tag.endPos + tagLength);
   fragmentSource = fragmentSource.replace(/^\n|\n$/g, '');
-  fs.writeFileSync('./' + tag.path.replace(/^.\//, '').replace(/\//g, '__'), fragmentSource);
+  mkdirp.sync(path.dirname(tag.path));
+  fs.writeFileSync(tag.path, fragmentSource);
   lastEnd = tag.endPos + tagLength;
   if (i === tags.length - 1) {
     newSource.push(source.slice(lastEnd));
@@ -47,4 +46,4 @@ tags.forEach(function(tag, i) {
 });
 
 newSource = newSource.join('');
-fs.writeFileSync('./_ckeditor.js', newSource);
+fs.writeFileSync('./ckeditor.js', newSource);
